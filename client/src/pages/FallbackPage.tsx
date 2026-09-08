@@ -755,7 +755,13 @@ export default function FallbackPage() {
   }
 
   function handleToggleAll(enabled: boolean) {
-    setLocalEntries(allEntries.map(e => (e.keyCount > 0 ? { ...e, enabled } : e)))
+    // Toggle only the rows the user can currently see. filteredConfigured
+    // equals the full configured set when the search box is empty (an empty
+    // or whitespace query matches everything), so the unfiltered toggle-all
+    // is unchanged. allEntries is mapped so non-matching rows and any other
+    // unsaved local edits are preserved.
+    const inView = new Set(filteredConfigured.map(e => e.modelDbId))
+    setLocalEntries(allEntries.map(e => (inView.has(e.modelDbId) ? { ...e, enabled } : e)))
   }
 
   const hasChanges = localEntries !== null || pendingModelEdits.size > 0 || pendingRetryLimit !== null
@@ -858,9 +864,12 @@ export default function FallbackPage() {
           </Tooltip>
         </th>
         <th className="py-2 pr-3 font-medium text-right">
-          <label className="flex items-center gap-1 justify-end cursor-pointer" title="Enable all / disable all">
+          <label
+            className="flex items-center gap-1 justify-end cursor-pointer"
+            title={query !== '' ? 'Enable/disable all shown (filter active)' : 'Enable all / disable all'}
+          >
             <Switch
-              checked={configured.every(e => e.enabled)}
+              checked={filteredConfigured.every(e => e.enabled)}
               onCheckedChange={(c) => handleToggleAll(c)}
             />
             <span>On</span>
