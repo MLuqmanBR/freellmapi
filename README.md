@@ -236,7 +236,7 @@ print(resp.choices[0].message.content)
 
 If no vision-capable model is enabled in your cascade, an image request returns a clear `422` (`code: "no_vision_model"`) rather than silently dropping the image.
 
-Every response carries an `X-Routed-Via: <platform>/<model>` header so you can see which provider actually served each call. If a request cascaded between providers, you'll also see `X-Fallback-Attempts: N`.
+Every response carries an `X-Routed-Via: <platform>/<model>` header so you can see which provider actually served each call. The `/v1/responses` route also sets `X-Fallback-Attempts: N` when it cascaded between providers.
 
 ### Embeddings
 
@@ -392,7 +392,7 @@ as it is.
 ```bash
 npm install
 npm run dev      # server on :3001, dashboard on :5173, both with HMR
-npm test         # server vitest + client typecheck (tsc --noEmit)
+npm test         # server vitest + client typecheck (tsc --noEmit) + client eslint
 npm run build    # compile server and dashboard
 ```
 

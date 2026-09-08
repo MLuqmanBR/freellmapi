@@ -2,7 +2,7 @@
 
 > **Audience:** AI agents + human maintainers. Follow these rules exactly. Order matters.
 > 
-> **Last updated:** 2026-06-08 after a major rebase of 2 feature branches through upstream's
+> **Last updated:** 2026-09-08 (docs-accuracy pass). Originally 2026-06-08 after a major rebase of 2 feature branches through upstream's
 > migration refactor (V24→V25). Lessons from every conflict, every wrong turn, and every
 > recovery are baked into this document.
 
@@ -31,7 +31,7 @@ test/combined  ←  integration scratchpad: merges all feat/* for testing.
 
 | Branch | Purpose | Upstream tracking? | Direct commits? |
 |---|---|---|---|
-| `main` | Mirror of `upstream/main` | Yes | ❌ NEVER |
+| `main` | Deployable: upstream + all custom features merged in | Yes | ⚠️ Merge/rebase flows only — no ad-hoc commits |
 | `feat/<name>` | One custom feature | No (rebased on main) | ✅ Yes |
 | `test/combined` | Integration of all `feat/*` | No | ❌ Merge only |
 
@@ -200,7 +200,7 @@ git merge upstream/main          # ❌ BAD — same reason
 
 # NEVER commit directly to main
 git checkout main
-# ... make changes ...           # ❌ BAD — main is upstream mirror only
+# ... make changes ...           # ❌ BAD — ad-hoc commits bypass the feat/* test gate
 git commit -m "fix stuff"        # ❌ BAD
 ```
 
@@ -344,7 +344,8 @@ When you see `<<<<<<< HEAD ... >>>>>>>` markers, don't guess. Apply this framewo
 - **Targeted edits ONLY.** Never `git checkout --ours/--theirs` blindly. Never copy
   old file versions wholesale. Use the edit tool to change only conflicting lines.
 - **Test after EVERY resolution.** Not at the end. After each `git rebase --continue`,
-  run `npm test -w server`. If 468 → 459, you know EXACTLY which resolution broke it.
+  run `npm test -w server`. If the pass count drops below the pre-rebase
+  baseline, you know EXACTLY which resolution broke it.
 
 #### Step 4: Common sub-patterns
 
@@ -506,7 +507,7 @@ npm run dev
 
 ```
 After rebase:
-  □ npm run test -w server    — all tests pass (currently 468, 43 test files)
+  □ npm run test -w server    — all tests pass (1264 tests across 111 test files as of 2026-09-08)
   □ npm run dev               — manual smoke test
   □ If ANYTHING fails → DO NOT PUSH → fix first
   □ Common failure patterns after upstream sync:
@@ -526,7 +527,8 @@ After rebase:
 □ Did I fetch upstream and check if I'm behind?
   → git fetch upstream && git log --oneline main..upstream/main
 □ Did I write tests for new behavior?
-□ Did I run the full test suite? (npm run test -w server, expect 468 passing)
+□ Did I run the full test suite? (npm run test -w server — 1264 passing as of
+  2026-09-08; re-check after any upstream sync)
 □ Is my commit message in conventional commit format?
 □ Does my change touch a file that upstream modifies?
   → If yes: Am I prepared for a conflict at next rebase?
@@ -546,7 +548,7 @@ After rebase:
 # Check status
 git fetch upstream
 git log --oneline main..upstream/main    # commits upstream has that you don't
-git log --oneline upstream/main..main    # (should be empty — main == upstream)
+git log --oneline upstream/main..main    # custom commits main is ahead by (grows with every merged feature)
 
 # List all feature branches
 git branch | grep feat/
@@ -584,7 +586,7 @@ git push origin main
 |---|---|---|
 | `git merge upstream/main` into a feat branch | Creates merge commits. Rebase instead. | — |
 | Multiple features in one branch | Can't rebase independently. Can't revert one without the other. | — |
-| Committing to main directly | main must stay identical to upstream/main. | — |
+| Committing to main directly | Ad-hoc commits skip the feat/* branch's full-suite test gate. | — |
 | `push --force` on main | Destroys upstream tracking. Use `--force-with-lease` on feat/* only. | — |
 | Skipping tests after rebase | Conflicts can silently break things. | Skipped tests, got 11 failures later |
 | Letting divergence accumulate >2 weeks | Each week of delay = more conflicts to resolve at once. | 23 commits behind → complex migration refactor |
@@ -623,6 +625,10 @@ api build                 Force rebuild
 api logs                  Tail server.log
 api help                  Show help
 ```
+The CLI is systemd-aware (since 15cd18a): the enabled `api-gateway.service`
+user unit shows as `(systemd unit)` in `status`/`list`, `start` probes the port
+before spawning, and `stop`/`restart` refuse to signal the unit — manage it
+with `systemctl --user stop api-gateway.service`.
 
 The CLI tracks instances via `.api-gateway.instances` (gitignored). Multiple
 instances on different ports are supported. The `api` command is registered
@@ -1050,5 +1056,5 @@ In `client/src/components/ui/select.tsx`, add to the `Positioner`:
 
 ---
 
-*Last updated: 2026-06-10 — CLI management tool, desktop removal, catalog-sync removal, credential import generalized, all custom features merged to main.*
+*Last updated: 2026-09-08 — docs-accuracy pass: branch model harmonized (main = deployable upstream + features, never a pure mirror), test counts refreshed (1264/111), CLI systemd behavior documented. Prior: 2026-06-10 — CLI management tool, desktop removal, catalog-sync removal, credential import generalized, all custom features merged to main.*
 *Features tracked: custom provider CRUD, auto-discovery, model editing, /v1/models filtering, exhaustion recovery, LAN auto-trust, parallel gating, CLI tool, queued edits*

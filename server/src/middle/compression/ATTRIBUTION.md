@@ -49,9 +49,10 @@ api-gateway middle layer. The techniques and safety scaffolding are concept-port
 
 ## Measurement Provenance
 
-Per `.upgrade-findings/batch5-caveman-headroom-ponytail.md`, every "X% savings"
-number cited from the reference projects was measured by code, not a bare README
-claim:
+Every "X% savings" number cited from the reference projects was measured by
+code, not a bare README claim (the `benchmarks/…` paths below live inside the
+respective reference repositories, not this repo; the original per-batch study
+notes were consolidated into the local PROJECT-STATE.md archive):
 
 - **SmartCrusher** "60-95% fewer tokens (JSON data), 15-20% (coding agents)" —
   `benchmarks/agent_cost_benchmark.py:13` "50-80% on tool outputs" in CODE, plus
